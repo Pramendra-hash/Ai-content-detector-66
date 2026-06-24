@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ionosphere Impact Dashboard</title>
+
+<!-- Leaflet Map -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:#08111f;
+  color:white;
+  min-height:100vh;
+  padding:20px;
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+}
+
+h1{
+  text-align:center;
+  margin-bottom:30px;
+  color:#00e5ff;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:#121c30;
+  padding:20px;
+  border-radius:18px;
+  box-shadow:0 0 20px rgba(0,229,255,0.15);
+}
+
+.card h2{
+  color:#00e5ff;
+  margin-bottom:15px;
+}
+
+.card p{
+  margin:12px 0;
+  font-size:17px;
+}
+
+#status{
+  margin-top:20px;
+  padding:15px;
+  border-radius:12px;
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+}
+
+.low{
+  background:#2ecc71;
+}
+
+.moderate{
+  background:#f1c40f;
+  color:black;
+}
+
+.high{
+  background:#e67e22;
+}
+
+.severe{
+  background:#e74c3c;
+}
+
+button{
+  margin-top:20px;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:#00e5ff;
+  color:black;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  opacity:0.9;
+}
+
+#map{
+  width:100%;
+  height:350px;
+  border-radius:12px;
+}
+
+canvas{
+  width:100% !important;
+  height:300px !important;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🌞 Ionosphere Impact Dashboard</h1>
+
+<div class="grid">
+
+<div class="card">
+<h2>☀️ Solar Flare Details</h2>
+
+<p><strong>Flare:</strong> <span id="flare">X1.8</span></p>
+
+<p><strong>Probability:</strong>
+<span id="probability">92%</span></p>
+
+<p><strong>TEC Increase:</strong>
+<span id="tec">35%</span></p>
+
+<p><strong>GPS Error:</strong>
+<span id="gps">High</span></p>
+
+<p><strong>HF Radio Blackout:</strong>
+<span id="radio">Severe</span></p>
+
+<p><strong>Affected Region:</strong>
+<span id="region">Asia-Pacific</span></p>
+
+<p><strong>Duration:</strong>
+<span id="duration">45 Minutes</span></p>
+
+<div id="status" class="severe">
+🔴 SEVERE RISK
+</div>
+
+<button onclick="simulate()">
+Simulate New Flare
+</button>
+
+</div>
+
+<div class="card">
+<h2>🌍 Affected Region Map</h2>
+<div id="map"></div>
+</div>
+
+<div class="card" style="grid-column:1/-1;">
+<h2>📈 Real-Time TEC Graph</h2>
+<canvas id="tecChart"></canvas>
+</div>
+
+</div>
+
+</div>
+
+<script>
+/* ---------------- MAP ---------------- */
+
+const map = L.map('map').setView([20,78],3);
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+  attribution:'© OpenStreetMap'
+}
+).addTo(map);
+
+let marker = L.marker([22,80])
+.addTo(map)
+.bindPopup('Potential Ionospheric Disturbance')
+.openPopup();
+
+/* ---------------- GRAPH ---------------- */
+
+const ctx = document.getElementById('tecChart');
+
+const tecChart = new Chart(ctx,{
+  type:'line',
+  data:{
+    labels:['0m','30m','60m','90m','120m'],
+    datasets:[
+      {
+        label:'TEC Index',
+        data:[12,15,20,28,35],
+        borderWidth:3,
+        tension:0.4
+      }
+    ]
+  },
+  options:{
+    responsive:true,
+    maintainAspectRatio:false
+  }
+});
+
+/* -------- REAL TIME GRAPH UPDATE ------- */
+
+setInterval(()=>{
+  const value =
+  Math.floor(Math.random()*35)+10;
+
+  tecChart.data.labels.push(
+    new Date().toLocaleTimeString()
+  );
+
+  tecChart.data.datasets[0].data.push(value);
+
+  if(tecChart.data.labels.length>10){
+    tecChart.data.labels.shift();
+    tecChart.data.datasets[0].data.shift();
+  }
+
+  tecChart.update();
+
+},5000);
+
+/* ------------ SIMULATION DATA ---------- */
+
+function simulate(){
+
+const data=[
+{
+flare:"M2.3",
+probability:"70%",
+tec:"15%",
+gps:"Medium",
+radio:"Moderate",
+region:"India",
+duration:"20 Minutes",
+risk:"🟡 MODERATE RISK",
+class:"moderate",
+lat:22,
+lng:78
+},
+{
+flare:"X1.8",
+probability:"92%",
+tec:"35%",
+gps:"High",
+radio:"Severe",
+region:"Asia-Pacific",
+duration:"45 Minutes",
+risk:"🔴 SEVERE RISK",
+class:"severe",
+lat:20,
+lng:120
+},
+{
+flare:"C4.1",
+probability:"45%",
+tec:"8%",
+gps:"Low",
+radio:"Low",
+region:"Europe",
+duration:"10 Minutes",
+risk:"🟢 LOW RISK",
+class:"low",
+lat:48,
+lng:12
+}
+];
+
+const d =
+data[Math.floor(Math.random()*data.length)];
+
+document.getElementById("flare").textContent =
+d.flare;
+
+document.getElementById("probability").textContent =
+d.probability;
+
+document.getElementById("tec").textContent =
+d.tec;
+
+document.getElementById("gps").textContent =
+d.gps;
+
+document.getElementById("radio").textContent =
+d.radio;
+
+document.getElementById("region").textContent =
+d.region;
+
+document.getElementById("duration").textContent =
+d.duration;
+
+const status =
+document.getElementById("status");
+
+status.textContent =
+d.risk;
+
+status.className =
+d.class;
+
+/* MAP UPDATE */
+
+marker.setLatLng([d.lat,d.lng]);
+marker.setPopupContent(
+"Ionospheric Disturbance : " + d.region
+).openPopup();
+
+map.setView([d.lat,d.lng],4);
+}
+</script>
+
+</body>
+</html>
